@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -e
+
+./node_modules/webpack/bin/webpack.js --config ./webpack/webpack.client.js --env.TARGET=production --env.NODE_ENV=production

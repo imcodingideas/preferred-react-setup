@@ -1,9 +1,10 @@
 {
   "name": "preferred-react-setup",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "scripts": {
     "dev": "./webpack/scripts/run-dev",
+    "build:production": "./webpack/scripts/build-production",
     "test": "jest"
   },
   "author": "Joseph Chambers",
