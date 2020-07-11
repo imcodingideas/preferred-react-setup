@@ -1,0 +1,80 @@
+#!/bin/sh
+
+PROJECT_NAME=preferred-react-setup.localhost
+
+SSL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+CA=$SSL_DIR/certificates
+KEY_STRENGTH=2048 # in bits
+VALIDITY_LENGTH=360 # in days
+
+mkdir -p $CA/root
+mkdir -p $CA/intermediate
+mkdir -p $CA/$PROJECT_NAME
+
+rm -rf $CA/root/*
+rm -rf $CA/intermediate/*
+rm -rf $CA/$PROJECT_NAME/*
+
+touch $CA/root/index.txt
+touch $CA/root/index.txt.attr
+touch $CA/intermediate/index.txt
+touch $CA/intermediate/index.txt.attr
+
+echo $RANDOM | cut -c1-4 > $CA/root/serial
+echo $RANDOM | cut -c1-4 > $CA/intermediate/serial
+echo $RANDOM | cut -c1-4 > $CA/intermediate/crlnumber
+
+cd $CA
+
+## Generate Root Certificate Authority Key
+openssl genrsa -out root/ca.key.pem $KEY_STRENGTH
+
+## Generate Root Certifcate
+openssl req \
+  -new -x509 -days $VALIDITY_LENGTH -sha256 -extensions v3_ca \
+  -config $SSL_DIR/root.conf \
+  -key root/ca.key.pem \
+  -out root/ca.cert.pem
+
+# Generate Intermediate Certificate Authority Key
+openssl genrsa -out intermediate/ca.key.pem $KEY_STRENGTH
+
+# Generate Intermediate Certificate Authority Signing Request
+openssl req \
+  -new -sha256 \
+  -config $SSL_DIR/intermediate.conf \
+  -key intermediate/ca.key.pem \
+  -out intermediate/ca.csr.pem
+
+# Authorize the Intermediate Certificate with the Root Certificate
+openssl ca \
+  -batch -extensions v3_intermediate_ca -days $VALIDITY_LENGTH -notext -md sha256 \
+  -config $SSL_DIR/root.conf \
+  -in $CA/intermediate/ca.csr.pem \
+  -out $CA/intermediate/ca.cert.pem
+
+# Generate Server Certificate Key
+openssl genrsa -out $PROJECT_NAME/site.key.pem $KEY_STRENGTH
+
+# Generate Server Certificate Signing Request
+openssl req \
+  -config $SSL_DIR/server.conf \
+  -key $PROJECT_NAME/site.key.pem \
+  -new -sha256 -out $PROJECT_NAME/site.csr.pem
+
+# Authorize the Server Certificate with the Root Certificate
+openssl ca \
+  -batch -extensions server_cert -days $VALIDITY_LENGTH -notext -md sha256 \
+  -config $SSL_DIR/intermediate.conf \
+  -in $PROJECT_NAME/site.csr.pem \
+  -out $PROJECT_NAME/site.cert.pem
+
+# Create the Issuer Certificate Chain File
+cat intermediate/ca.cert.pem root/ca.cert.pem > $PROJECT_NAME/ca-chain.cert.pem
+
+# Verify the Certificate against the Issuer Chain
+openssl verify \
+  -CAfile $PROJECT_NAME/ca-chain.cert.pem \
+  $PROJECT_NAME/site.cert.pem
+
+echo "🔐 SSL Certificates can be found at $CA"
