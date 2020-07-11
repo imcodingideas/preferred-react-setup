@@ -3,6 +3,7 @@ const resolve = require('./config.resolve');
 const output = require('./config.output');
 const mode = require('./config.mode');
 const plugins = require('./config.plugins');
+const optimization = require('./config.optimization');
 const devServer = require('./config.devServer');
 
 module.exports = env => ({
@@ -15,6 +16,6 @@ module.exports = env => ({
   output: output(env),
   mode: mode(env),
   plugins: plugins(env),
-  optimization: {},
+  optimization: optimization(env),
   devServer: devServer(env),
 });
