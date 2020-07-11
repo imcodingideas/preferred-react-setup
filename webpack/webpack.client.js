@@ -16,5 +16,5 @@ module.exports = env => ({
   mode: mode(env),
   plugins: plugins(env),
   optimization: {},
-  devServer,
+  devServer: devServer(env),
 });
