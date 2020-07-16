@@ -7,6 +7,8 @@ This is a small starter project for my new react applications. This is a very op
 ```bash
 # clone the repository
 git clone git@github.com:imcodingideas/preferred-react-setup.git
+./webpack/ssl/generate-keys-and-certs
+./webpack/ssl/trust-root-certificate
 ```
 
 ```bash
@@ -18,6 +20,10 @@ yarn install
 # running your server locally
 yarn dev
 ```
+
+Next open your browser.
+
+https://preferred-react-setup.localhost:9002
 
 To help us get started, I've add setup the project with the following files to start with:
 
